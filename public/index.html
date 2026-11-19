@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>신채호 분노 게이지</title>
   <meta name="description" content="신채호의 현재 분노 수치를 실시간으로 확인하세요">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌋</text></svg>">
+  <link rel="icon" id="favicon" type="image/png" href="/images/ANGRY-N1.png">
   <style>
     :root {
       --bg: #0f1115;
@@ -13,7 +13,8 @@
       --text: #f3f4f6;
       --muted: #9ca3af;
       --track: #2a2e38;
-      --accent: #22c55e;
+      --accent: #99e550;
+      --face-bg: #99e550;
     }
     * { box-sizing: border-box; }
     body {
@@ -21,7 +22,7 @@
       font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
       display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px;
       background-image: radial-gradient(ellipse at top, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%);
-      transition: background-image .6s;
+      transition: background-color .6s, background-image .6s;
     }
     h1 { font-size: clamp(22px, 5vw, 32px); margin: 0 0 4px; letter-spacing: -0.02em; }
     .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
@@ -30,35 +31,45 @@
       box-shadow: 0 0 0 1px #ffffff10, 0 20px 60px -20px color-mix(in srgb, var(--accent) 60%, transparent);
       text-align: center; transition: box-shadow .6s;
     }
-    .gauge { width: 100%; max-width: 380px; margin: 0 auto; }
+    .face {
+      width: min(200px, 56vw); aspect-ratio: 1; margin: 0 auto 18px; border-radius: 20px; overflow: hidden;
+      background: var(--face-bg); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent), 0 12px 40px -12px var(--accent);
+      transition: background .6s, box-shadow .6s;
+    }
+    .face img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+    .gauge { width: 100%; max-width: 340px; margin: 0 auto; }
     .gauge svg { width: 100%; display: block; overflow: visible; }
     #arc { transition: stroke-dashoffset .9s cubic-bezier(.2,.9,.3,1.2), stroke .6s; }
     #needle { transform-origin: 150px 150px; transition: transform .9s cubic-bezier(.2,.9,.3,1.2); }
     .num {
-      margin-top: -6px; font-size: clamp(48px, 14vw, 72px); font-weight: 800;
+      margin-top: -6px; font-size: clamp(44px, 13vw, 64px); font-weight: 800;
       line-height: 1; color: var(--accent); transition: color .6s; font-variant-numeric: tabular-nums;
     }
     .num small { font-size: .3em; color: var(--muted); font-weight: 600; }
-    .level { margin-top: 18px; font-size: 18px; font-weight: 700; }
-    .level .emoji { font-size: 40px; display: block; margin-bottom: 6px; }
-    .caption { margin: 6px 0 0; font-size: 17px; color: var(--text); min-height: 1.4em; }
+    .level { margin-top: 16px; font-size: 16px; font-weight: 700; color: var(--accent); transition: color .6s; }
+    .caption { margin: 8px 0 0; font-size: 18px; font-weight: 600; color: var(--text); min-height: 1.4em; line-height: 1.5; word-break: keep-all; }
     .meta { margin-top: 18px; color: var(--muted); font-size: 12px; }
     .live { display: inline-flex; align-items: center; gap: 6px; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #6b7280; }
     .live.on .dot { background: #22c55e; box-shadow: 0 0 0 0 #22c55e88; animation: pulse 1.6s infinite; }
     @keyframes pulse { 70% { box-shadow: 0 0 0 8px #22c55e00; } 100% { box-shadow: 0 0 0 0 #22c55e00; } }
 
+    /* 100 이상: 화면 흔들림 */
     body.boom .card { animation: shake .35s infinite; }
-    body.boom .level .emoji { animation: bounce .6s infinite alternate; }
+    body.boom .face { animation: bounce .6s infinite alternate; }
     @keyframes shake {
       0%,100% { transform: translate(0,0) rotate(0); }
       25% { transform: translate(-3px,2px) rotate(-.6deg); }
       50% { transform: translate(3px,-2px) rotate(.6deg); }
       75% { transform: translate(-2px,-1px) rotate(-.3deg); }
     }
-    @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.25); } }
+    @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.08); } }
+    /* 숨겨진 단계: 어둡고 조용하게 */
+    body.hidden-stage { --bg: #0a0402; --card: #140804; }
+    body.hidden-stage .card { animation: none; }
+    body.hidden-stage .face { animation: none; }
     @media (prefers-reduced-motion: reduce) {
-      body.boom .card, body.boom .level .emoji { animation: none; }
+      body.boom .card, body.boom .face { animation: none; }
       #arc, #needle { transition: none; }
     }
 
@@ -79,13 +90,21 @@
       font-weight: 700; cursor: pointer; transition: background .6s; white-space: nowrap;
     }
     button.primary:disabled { opacity: .5; cursor: default; }
-    input[type=range] { width: 100%; accent-color: var(--accent); margin: 8px 0 4px; height: 28px; }
-    .slider-val { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .preview { display: flex; align-items: center; gap: 12px; }
+    .preview img { width: 56px; height: 56px; border-radius: 10px; image-rendering: pixelated; flex: none; }
+    .slider-val { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+    .slider-cap { font-size: 13px; color: var(--muted); }
+    input[type=range] { width: 100%; accent-color: var(--accent); margin: 10px 0 4px; height: 28px; }
     .presets { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 10px 0 14px; }
     .presets button {
       background: #0f1115; color: var(--text); border: 1px solid #ffffff1f; border-radius: 10px; padding: 8px 0;
       font: inherit; font-size: 13px; cursor: pointer;
     }
+    .limit-break {
+      width: 100%; margin-bottom: 8px; background: #230e03; color: #e8c9a8; border: 1px dashed #8a5a3c; border-radius: 12px;
+      padding: 10px 16px; font: inherit; font-weight: 700; cursor: pointer;
+    }
+    .limit-break.on { background: #8a5a3c; color: #fff; border-style: solid; }
     .msg { font-size: 13px; color: var(--muted); margin-top: 8px; min-height: 1.2em; }
     .msg.err { color: #f87171; }
     .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
@@ -96,6 +115,8 @@
   <p class="sub">지금 신채호는 얼마나 화가 났을까?</p>
 
   <main class="card">
+    <div class="face"><img id="face" src="/images/ANGRY-N1.png" alt="신채호 얼굴" width="320" height="320"></div>
+
     <div class="gauge" aria-hidden="true">
       <svg viewBox="0 0 300 170">
         <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="var(--track)" stroke-width="22" stroke-linecap="round"/>
@@ -109,9 +130,8 @@
     </div>
     <div class="num"><span id="num">0</span><small> / 100</small></div>
 
-    <div class="level" role="status" aria-live="polite">
-      <span class="emoji" id="emoji">🍵</span>
-      <span id="levelName">평온</span>
+    <div role="status" aria-live="polite">
+      <div class="level" id="levelName"></div>
       <p class="caption" id="caption">불러오는 중...</p>
     </div>
 
@@ -131,9 +151,16 @@
         <p class="hint">비밀번호는 이 브라우저 탭을 닫으면 잊어버려요.</p>
       </div>
       <div id="controlBox" hidden>
-        <div class="slider-val"><span id="sliderVal">0</span> <small style="font-size:14px;color:var(--muted)" id="sliderCaption"></small></div>
+        <div class="preview">
+          <img id="sliderFace" src="/images/ANGRY-N1.png" alt="">
+          <div>
+            <div class="slider-val" id="sliderVal">0</div>
+            <div class="slider-cap" id="sliderCaption"></div>
+          </div>
+        </div>
         <input type="range" id="slider" min="0" max="100" step="1" value="0" aria-label="분노 수치">
         <div class="presets" id="presets"></div>
+        <button type="button" class="limit-break" id="limitBreak" hidden>🔥 한계 돌파 (100 넘기기)</button>
         <div class="row">
           <button class="primary" id="saveBtn" style="flex:1">이 수치로 변경</button>
         </div>
@@ -145,24 +172,34 @@
   <script src="/levels.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
-    const { getLevel } = window.AngerLevels;
+    const { LEVELS, SPECIAL, HIDDEN_VALUE, getLevel, displayValue } = window.AngerLevels;
+    const img = (name) => `/images/${name}`;
     let current = null;
+    let pending = 0; // 관리자 패널에서 고른 값 (100 넘기면 HIDDEN_VALUE)
     let password = null;
     try { password = sessionStorage.getItem('gauge-pw'); } catch {}
+
+    // 사진 미리 불러오기 (바뀔 때 깜빡임 방지)
+    [...LEVELS, ...Object.values(SPECIAL)].forEach((l) => { new Image().src = img(l.image); });
 
     function render(s) {
       current = s;
       const v = s.value;
+      const g = Math.min(100, v); // 게이지는 100까지만 그림
       const lv = getLevel(v);
-      document.documentElement.style.setProperty('--accent', lv.color);
-      $('arc').setAttribute('stroke-dashoffset', 100 - v);
-      $('needle').style.transform = `rotate(${(v / 100) * 180 - 90}deg)`;
-      $('num').textContent = v;
-      $('emoji').textContent = lv.emoji;
-      $('levelName').textContent = `[${lv.name}]`;
+      const root = document.documentElement.style;
+      root.setProperty('--accent', lv.color);
+      root.setProperty('--face-bg', lv.bg);
+      $('face').src = img(lv.image);
+      $('favicon').href = img(lv.image);
+      $('arc').setAttribute('stroke-dashoffset', 100 - g);
+      $('needle').style.transform = `rotate(${(g / 100) * 180 - 90}deg)`;
+      $('num').textContent = displayValue(v);
+      $('levelName').textContent = `[${lv.label}]`;
       $('caption').textContent = lv.caption;
-      document.body.classList.toggle('boom', v > 90);
-      document.title = `${lv.emoji} ${v} | 신채호 분노 게이지`;
+      document.body.classList.toggle('boom', v >= 100 && !lv.hidden);
+      document.body.classList.toggle('hidden-stage', Boolean(lv.hidden));
+      document.title = `${displayValue(v)} | 신채호 분노 게이지`;
       $('updated').textContent = s.updatedAt
         ? `${new Date(s.updatedAt).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} ${s.by === 'discord' ? '디스코드에서' : '웹에서'} 변경`
         : '아직 변경 기록 없음';
@@ -213,12 +250,19 @@
     }
 
     function updateSlider(v) {
-      $('slider').value = v;
-      $('sliderVal').textContent = v;
+      pending = v;
+      $('slider').value = Math.min(100, v);
+      $('sliderVal').textContent = displayValue(v);
       const lv = getLevel(v);
-      $('sliderCaption').textContent = `${lv.emoji} ${lv.name}`;
+      $('sliderFace').src = img(lv.image);
+      $('sliderFace').style.background = lv.bg;
+      $('sliderCaption').textContent = `[${lv.label}] ${lv.caption}`;
+      // 100에 놓았을 때만 '한계 돌파' 버튼이 나타남
+      $('limitBreak').hidden = v < 100;
+      $('limitBreak').classList.toggle('on', v > 100);
     }
     $('slider').oninput = (e) => updateSlider(Number(e.target.value));
+    $('limitBreak').onclick = () => updateSlider(pending > 100 ? 100 : HIDDEN_VALUE);
 
     [0, 20, 40, 60, 80, 100].forEach((v) => {
       const b = document.createElement('button');
@@ -231,7 +275,7 @@
     $('saveBtn').onclick = async () => {
       $('saveBtn').disabled = true;
       try {
-        const s = await post({ value: Number($('slider').value) });
+        const s = await post({ value: pending });
         render(s);
         setMsg('변경했어요!');
       } catch (err) {

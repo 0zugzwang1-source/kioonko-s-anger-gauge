@@ -14,7 +14,7 @@ const commands = [
     description: '신채호 분노 게이지를 확인하거나 바꿉니다 (변경은 신채호만 가능)',
     type: 1,
     options: [
-      { name: '값', description: '0~100 사이 분노 수치 (비우면 현재 값 확인)', type: 4, required: false, min_value: 0, max_value: 100 },
+      { name: '값', description: '0~100 사이 분노 수치 (비우면 현재 값 확인)', type: 4, required: false, min_value: 0 },
     ],
   },
 ];
