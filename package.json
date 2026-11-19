@@ -1,0 +1,16 @@
+{
+  "name": "kioonko-s-anger-gauge",
+  "version": "1.0.0",
+  "description": "신채호 분노 게이지 - 실시간 웹 게이지 + 디스코드 슬래시 명령",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --env-file=.env server.js",
+    "register": "node --env-file=.env scripts/register-commands.js",
+    "register:render": "node scripts/register-commands.js"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}
